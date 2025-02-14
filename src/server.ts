@@ -1,6 +1,8 @@
 import { createServer } from "http";
 import next from "next";
 import express, { Request, Response } from "express";
+import { serveApi } from "./api";
+import "dotenv/config";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const dev = process.env.NODE_ENV !== "production";
@@ -10,8 +12,8 @@ const handle = app.getRequestHandler();
 export async function startServer() {
   try {
     const server = express();
-
     await app.prepare();
+    await serveApi(server);
     server.all("*", (req: Request, res: Response) => {
       return handle(req, res);
     });

@@ -76,21 +76,49 @@ model VerificationToken {
 }
 
 model WhatsApp {
-  id       String            @id @default(cuid())
-  name     String
-  apiKey   String            @unique @default(uuid()) @map("api_key")
-  sessions WhatsAppSession[]
+  id                  String            @id @default(cuid())
+  name                String
+  apiKey              String            @unique @default(uuid()) @map("api_key")
+  reachReconnectLimit Boolean           @default(false) @map("reach_reconnect_limit")
+  isActive            Boolean           @default(true) @map("is_active")
+  sessions            WhatsAppSession[]
 
   @@map("whatsapp")
 }
 
 model WhatsAppSession {
   id         String   @id @default(cuid())
-  whatsappId String   @map("whatsapp_id")
-  whatsapp   WhatsApp @relation(fields: [whatsappId], references: [id])
+  whatsAppId String   @map("whatsapp_id")
+  whatsApp   WhatsApp @relation(fields: [whatsAppId], references: [id])
   data       String   @db.Text
 
-  @@unique([id, whatsappId], map: "whatsapp_session_id_whatsapp_id")
-  @@index([id, whatsappId])
+  @@unique([id, whatsAppId], map: "whatsapp_session_id_whatsapp_id")
+  @@index([id, whatsAppId])
   @@map("whatsapp_session")
+}
+
+model Contact {
+  id                  String   @id @default(cuid())
+  name                String?
+  countryCode         String   @map("country_code")
+  phoneNumber         String   @unique @map("phone_number")
+  nationalNumber      String?  @map("national_number")
+  internationalNumber String?  @map("international_number")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("contact")
+}
+
+model Broadcast {
+  id           String    @id @default(cuid())
+  toContactIds String[]  @map("to_contact_ids")
+  message      String
+  rawMedia     String?   @map("raw_media")
+  status       String?   @default("pending")
+  scheduleTime DateTime? @map("schedule_time")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("broadcast")
 }

@@ -58,6 +58,8 @@ CREATE TABLE "whatsapp" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "api_key" TEXT NOT NULL,
+    "reach_reconnect_limit" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "whatsapp_pkey" PRIMARY KEY ("id")
 );
@@ -69,6 +71,34 @@ CREATE TABLE "whatsapp_session" (
     "data" TEXT NOT NULL,
 
     CONSTRAINT "whatsapp_session_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "contact" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "country_code" TEXT NOT NULL,
+    "phone_number" TEXT NOT NULL,
+    "national_number" TEXT,
+    "international_number" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "contact_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "broadcast" (
+    "id" TEXT NOT NULL,
+    "to_contact_ids" TEXT[],
+    "message" TEXT NOT NULL,
+    "raw_media" TEXT,
+    "status" TEXT DEFAULT 'pending',
+    "schedule_time" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "broadcast_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -85,6 +115,9 @@ CREATE INDEX "whatsapp_session_id_whatsapp_id_idx" ON "whatsapp_session"("id", "
 
 -- CreateIndex
 CREATE UNIQUE INDEX "whatsapp_session_id_whatsapp_id" ON "whatsapp_session"("id", "whatsapp_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "contact_phone_number_key" ON "contact"("phone_number");
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,3 +1,4 @@
 import { startServer } from "./server";
+import { initWhatsAppBots } from "./whatsapp";
 
-startServer();
+initWhatsAppBots().then(() => startServer());

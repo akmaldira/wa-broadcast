@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRightIcon, LayoutDashboard, RadioTower } from "lucide-react";
+import { ChevronRightIcon, Contact, RadioTower } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,16 +39,28 @@ type NavItem =
   | {
       type: "group";
       title: string;
+      url: string;
       icon: React.ElementType;
       isActive: boolean;
       items: { title: string; url: string }[];
     };
 const navPos = [
   {
-    type: "item",
-    title: "Dashboard",
-    url: "/app",
-    icon: LayoutDashboard,
+    type: "group",
+    title: "Broadcast",
+    url: "/app/broadcast",
+    icon: RadioTower,
+    isActive: true,
+    items: [
+      {
+        title: "Buat",
+        url: "/app/broadcast/create",
+      },
+      {
+        title: "Riwayat",
+        url: "/app/broadcast/history",
+      },
+    ],
   },
   {
     type: "item",
@@ -58,9 +70,9 @@ const navPos = [
   },
   {
     type: "item",
-    title: "Broadcast",
-    url: "/app/broadcast",
-    icon: RadioTower,
+    title: "Kontak",
+    url: "/app/contact",
+    icon: Contact,
   },
 ] as NavItem[];
 
@@ -92,7 +104,10 @@ export function AppSidebar({
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton
                         tooltip={item.title}
-                        className="text-md"
+                        className={cn(
+                          "text-md",
+                          pathname.startsWith(item.url) && "bg-sidebar-accent"
+                        )}
                       >
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
@@ -103,7 +118,13 @@ export function AppSidebar({
                       <SidebarMenuSub>
                         {item.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild className="text-base">
+                            <SidebarMenuSubButton
+                              asChild
+                              className={cn(
+                                "text-base",
+                                pathname === subItem.url && "bg-sidebar-accent"
+                              )}
+                            >
                               <Link href={subItem.url}>
                                 <span>{subItem.title}</span>
                               </Link>
