@@ -210,6 +210,24 @@ export async function jidExists(
     const groupMeta = await whatsAppBot.groupMetadata(jid);
     return !!groupMeta.id;
   } catch (e) {
-    return Promise.reject(e);
+    throw e;
+  }
+}
+
+export async function sendMessage(
+  whatsAppId: string,
+  jid: string,
+  message: string,
+  media?: File
+) {
+  const whatsAppBot = whatsAppBots.get(whatsAppId);
+  if (!whatsAppBot) throw new Error(`WhatsApp with id ${whatsAppId} not found`);
+  try {
+    const response = await whatsAppBot.sendMessage(jid, {
+      text: message,
+    });
+    return response;
+  } catch (e) {
+    throw e;
   }
 }

@@ -12,8 +12,8 @@ const handle = app.getRequestHandler();
 export async function startServer() {
   try {
     const server = express();
-    await app.prepare();
     await serveApi(server);
+    await app.prepare();
     server.all("*", (req: Request, res: Response) => {
       return handle(req, res);
     });

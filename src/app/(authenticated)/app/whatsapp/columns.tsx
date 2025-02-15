@@ -18,7 +18,9 @@ export const columns: ColumnDef<WhatsAppWithData>[] = [
     accessorKey: "qrCode",
     header: "Login QR Code",
     cell: ({ row }) => {
-      return <QRCodeDialog whatsApp={row.original} />;
+      return (
+        <QRCodeDialog whatsApp={row.original} qrCode={row.original.qrCode} />
+      );
     },
   },
   {

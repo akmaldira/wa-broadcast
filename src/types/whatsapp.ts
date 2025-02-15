@@ -10,7 +10,7 @@ export type WhatsAppBotStatus = {
   id: string;
   connectionState: Partial<ConnectionState>;
   qrCode?: string;
-  status: "connecting" | "connected" | "disconnected";
+  status: "connecting" | "connected" | "disconnected" | "unknown";
 };
 
 export type WhatsAppBot = WASocket & {

@@ -1,16 +1,22 @@
-import { Express, NextFunction, Request, Response, Router } from "express";
+import express, {
+  Express,
+  NextFunction,
+  Request,
+  Response,
+  Router,
+} from "express";
 import {
   createWhatsAppBot,
   deleteWhatsAppBot,
   getWhatsAppBot,
   getWhatsAppBots,
+  sendMessage,
 } from "./whatsapp";
-import express from "express";
+import { createBroadcastSchema } from "./app/(authenticated)/app/broadcast/create/schema";
 const prefix = "/api2";
 
 function whatsAppRoute() {
   const route = Router();
-  route.use(express.json());
   route.get("/whatsapp/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -111,6 +117,82 @@ function whatsAppRoute() {
   return route;
 }
 
+function publicRoute() {
+  const route = Router();
+  route.post("/whatsapp/send-message", async (req, res) => {
+    try {
+      const { data, error } = createBroadcastSchema.safeParse(req.body);
+      if (error) {
+        return void res.status(400).json({ error: error.message });
+      }
+
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("X-Accel-Buffering", "no");
+
+      const whatsAppBot = getWhatsAppBot(data.whatsAppBot.id);
+      if (!whatsAppBot) {
+        return void res.status(400).json({ error: "Whatsapp not found" });
+      }
+
+      let index = 1;
+      for (const number of data.toPhones) {
+        const percentage = `${Math.floor(
+          (index / data.toPhones.length) * 100
+        )}%`;
+        let dataChunk = {
+          percentage: percentage,
+          message: `Mengirim pesan ke ${number.label}...`,
+        };
+        try {
+          res.write(JSON.stringify(dataChunk) + "\n");
+          console.log(dataChunk.message);
+          const response = await sendMessage(
+            data.whatsAppBot.id,
+            `${number.label.replace("+", "")}@s.whatsapp.net`,
+            data.message
+          );
+          dataChunk.message = `Pesan terkirim ke ${number.label}`;
+          res.write(JSON.stringify(dataChunk) + "\n");
+          console.log(dataChunk.message);
+        } catch (error) {
+          dataChunk.message = `Pesan gagal terkirim ke ${number.label} (${
+            error instanceof Error ? error.message : "Unknown error"
+          })`;
+          res.write(JSON.stringify(dataChunk) + "\n");
+          console.log(dataChunk.message);
+        } finally {
+          index++;
+        }
+        if (index - 1 < data.toPhones.length) {
+          res.write(
+            JSON.stringify({
+              ...dataChunk,
+              message: `Delay ${data.delay} detik...`,
+            }) + "\n"
+          );
+          console.log(`Delay ${data.delay} detik...`);
+          for (let i = 0; i < data.delay; i++) {
+            dataChunk.message = `Delay ${data.delay - i} detik...`;
+            res.write(JSON.stringify(dataChunk) + "\n");
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      }
+      return void res.end();
+    } catch (error) {
+      console.log("POST /api2/whatsapp/send-message Error:", error);
+      return void res.status(500).json({
+        error: "An error occurred",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  return route;
+}
+
 function isPrivateMiddleware(req: Request, res: Response, next: NextFunction) {
   const xPrivateApi = req.headers["x-private-api"];
 
@@ -125,5 +207,8 @@ function isPrivateMiddleware(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function serveApi(server: Express) {
+  server.use(express.json());
+  server.use(express.urlencoded({ extended: true }));
+  server.use(prefix, publicRoute());
   server.use(prefix, isPrivateMiddleware, whatsAppRoute());
 }

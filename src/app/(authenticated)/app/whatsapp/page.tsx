@@ -9,7 +9,8 @@ export default async function WhatsAppPage() {
   if (whatsAppsBots.status === "error") {
     return (
       <div className="flex items-center justify-center mt-[20vh]">
-        <h1>{whatsAppsBots.error}</h1>
+        <h1>Error getting WhatsApp bots</h1>
+        <p className="text-destructive">{whatsAppsBots.error}</p>
       </div>
     );
   }

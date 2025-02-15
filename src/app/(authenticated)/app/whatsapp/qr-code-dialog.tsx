@@ -18,13 +18,15 @@ import { WhatsAppWithData } from "@/types/prisma";
 
 export default function QRCodeDialog({
   whatsApp,
+  qrCode,
 }: {
   whatsApp: WhatsAppWithData;
+  qrCode?: string;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [qrCodeDataURL, setQRCodeDataURL] = React.useState<
-    string | undefined
-  >();
+  const [qrCodeDataURL, setQRCodeDataURL] = React.useState<string | undefined>(
+    qrCode
+  );
   const [isPending, startTransition] = React.useTransition();
   React.useEffect(() => {
     if (dialogOpen && whatsApp.status !== "connected") {
@@ -39,7 +41,7 @@ export default function QRCodeDialog({
             setQRCodeDataURL(response.data.qrCode);
           }
         });
-      }, 15 * 1000);
+      }, 10 * 1000);
 
       return () => clearInterval(interval);
     }
@@ -80,7 +82,7 @@ export default function QRCodeDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="w-full flex items-center justify-center">
-          {isPending ? (
+          {isPending || (whatsApp.status === "connecting" && !qrCodeDataURL) ? (
             <div className="w-full md:w-96 flex items-center justify-center h-96">
               <Loader2 className="animate-spin" />
             </div>

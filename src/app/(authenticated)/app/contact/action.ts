@@ -20,7 +20,7 @@ export async function upsertContactAction(
       response = await prisma.contact.update({
         where: { id: values.id },
         data: {
-          name: values.name,
+          name: values.name || null,
           countryCode: values.countryCode,
           phoneNumber: values.phone,
           nationalNumber: values.nationalNumber,
@@ -41,7 +41,7 @@ export async function upsertContactAction(
       }
       response = await prisma.contact.create({
         data: {
-          name: values.name,
+          name: values.name || null,
           countryCode: values.countryCode,
           phoneNumber: values.phone,
           nationalNumber: values.nationalNumber,

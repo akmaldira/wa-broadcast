@@ -7,7 +7,11 @@ const optionSchema = z.object({
 });
 
 export const createBroadcastSchema = z.object({
-  toPhones: z.array(optionSchema),
+  whatsAppBot: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+  toPhones: z.array(optionSchema).min(1, "Harus ada nomor tujuan"),
   message: z
     .string()
     .min(1, "Pesan tidak boleh kosong")

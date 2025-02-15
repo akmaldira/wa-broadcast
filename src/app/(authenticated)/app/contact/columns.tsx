@@ -9,6 +9,9 @@ export const columns: ColumnDef<Contact>[] = [
   {
     accessorKey: "name",
     header: "Nama",
+    cell: ({ row }) => {
+      return row.original.name || "-";
+    },
   },
   {
     accessorKey: "phoneNumber",
