@@ -98,7 +98,7 @@ export default function UpsertContactDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama kontak</FormLabel>
+                  <FormLabel>Nama kontak (opsional)</FormLabel>
                   <FormControl>
                     <Input placeholder="Masukkan nama kontak" {...field} />
                   </FormControl>

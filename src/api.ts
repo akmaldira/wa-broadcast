@@ -15,13 +15,14 @@ import {
 import multer from "multer";
 import path from "path";
 import { AnyMediaMessageContent } from "@whiskeysockets/baileys";
+import { prisma } from "./lib/prisma";
 
 const storage = multer.diskStorage({
   destination: function (_req, _file, cb) {
     cb(null, path.resolve(path.join("uploads")));
   },
   filename: function (_req, file, cb) {
-    cb(null, file.originalname);
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 const upload = multer({
@@ -178,14 +179,25 @@ function publicRoute() {
       try {
         const { whatsAppBotId, toPhones, message, delay } = req.body;
         const file = req.file;
-        const _mediaType = file ? file.mimetype.split("/")[0] : null;
         if (!whatsAppBotId || !toPhones || !message || !delay) {
           return void res.status(400).json({ error: "Missing parameters" });
         }
-        const toPhoneArray = toPhones.split(",").map((phone: string) => ({
-          value: phone,
-          jid: `${phone.replace("+", "")}@s.whatsapp.net`,
-        })) as { value: string; jid: string }[];
+
+        const contacts = await prisma.contact.findMany({
+          where: {
+            id: {
+              in: toPhones.split(",").map((id: string) => id),
+            },
+          },
+        });
+
+        const toPhoneArray = contacts.map((contact) => ({
+          value: contact.id,
+          jid: `${contact.phoneNumber
+            .replaceAll(" ", "")
+            .replace("+", "")}@s.whatsapp.net`,
+          label: contact.phoneNumber.replaceAll(" ", "").replace("+", ""),
+        })) as { value: string; jid: string; label: string }[];
 
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Connection", "keep-alive");
@@ -197,6 +209,29 @@ function publicRoute() {
           return void res.status(400).json({ error: "Whatsapp not found" });
         }
 
+        const broadcast = await prisma.broadcast.create({
+          data: {
+            whatsAppId: whatsAppBotId,
+            toContactIds: toPhoneArray.map((contact) => contact.value),
+            message,
+            delay: parseInt(delay),
+            rawMedia: file
+              ? JSON.stringify([
+                  {
+                    originalname: file.originalname,
+                    mimetype: file.mimetype,
+                    encoding: file.encoding,
+                    size: file.size,
+                    path: file.path,
+                  },
+                ])
+              : null,
+            status: "pending",
+          },
+        });
+
+        const success = [] as string[];
+        const errors = [] as string[];
         let index = 1;
         for (const number of toPhoneArray) {
           const percentage = `${Math.floor(
@@ -204,22 +239,27 @@ function publicRoute() {
           )}%`;
           const dataChunk = {
             percentage: percentage,
-            message: `Mengirim pesan ke ${number.value}...`,
+            message: `Mengirim pesan ke ${number.label}...`,
           };
           try {
             res.write(JSON.stringify(dataChunk) + "\n");
-            console.log(dataChunk.message);
-            const _response = await sendMessage(
+            const _ = await sendMessage(
               whatsAppBotId,
               number.jid,
               message,
               file ? fileToMedia(file, message) : undefined
             );
-            dataChunk.message = `Pesan terkirim ke ${number.value}`;
+            dataChunk.message = `Pesan terkirim ke ${number.label}`;
+            success.push(`Pesan terkirim ke ${number.label}`);
             res.write(JSON.stringify(dataChunk) + "\n");
             console.log(dataChunk.message);
           } catch (error) {
-            dataChunk.message = `Pesan gagal terkirim ke ${number.value} (${
+            errors.push(
+              `Pesan gagal terkirim ke ${number.label} (${
+                error instanceof Error ? error.message : "Unknown error"
+              })`
+            );
+            dataChunk.message = `Pesan gagal terkirim ke ${number.label} (${
               error instanceof Error ? error.message : "Unknown error"
             })`;
             res.write(JSON.stringify(dataChunk) + "\n");
@@ -242,6 +282,23 @@ function publicRoute() {
             }
           }
         }
+
+        let status = "pending";
+        if (errors.length > 0) {
+          status = success.length > 0 ? "some_error" : "error";
+        } else {
+          status = "success";
+        }
+        await prisma.broadcast.update({
+          where: {
+            id: broadcast.id,
+          },
+          data: {
+            status: status,
+            success: success,
+            errors: errors,
+          },
+        });
         return void res.end();
       } catch (error) {
         console.log("POST /api2/whatsapp/send-message Error:", error);

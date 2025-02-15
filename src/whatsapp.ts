@@ -67,6 +67,9 @@ export async function createWhatsAppBot(options: CreateSessionOptions) {
         !reachReconnectLimit &&
           prisma.whatsApp.delete({
             where: { id: whatsAppId },
+            include: {
+              broadcasts: true,
+            },
           }),
       ]);
       logger.info({ whatsapp: whatsAppId }, "Bot destroyed");

@@ -82,6 +82,7 @@ model WhatsApp {
   reachReconnectLimit Boolean           @default(false) @map("reach_reconnect_limit")
   isActive            Boolean           @default(true) @map("is_active")
   sessions            WhatsAppSession[]
+  broadcasts          Broadcast[]
 
   @@map("whatsapp")
 }
@@ -112,9 +113,14 @@ model Contact {
 
 model Broadcast {
   id           String    @id @default(cuid())
+  whatsAppId   String    @map("whatsapp_id")
+  whatsApp     WhatsApp  @relation(fields: [whatsAppId], references: [id], onDelete: Cascade)
   toContactIds String[]  @map("to_contact_ids")
   message      String
+  delay        Int
   rawMedia     String?   @map("raw_media")
+  success      String[]  @default([])
+  errors       String[]  @default([])
   status       String?   @default("pending")
   scheduleTime DateTime? @map("schedule_time")
   createdAt    DateTime  @default(now()) @map("created_at")

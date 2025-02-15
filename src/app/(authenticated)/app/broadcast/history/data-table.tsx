@@ -4,7 +4,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -16,8 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import UpsertContactDialog from "./upsert-contact-dialog";
 import { DataTablePagination } from "@/components/table-pagination";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -32,13 +34,15 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
     <div>
       <div className="flex items-center justify-end mb-4">
-        <UpsertContactDialog />
+        <Link href="/app/broadcast/create" className={cn(buttonVariants())}>
+          <Plus />
+          Buat Broadcast
+        </Link>
       </div>
       <div className="rounded-md border">
         <Table>

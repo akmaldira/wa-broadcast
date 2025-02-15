@@ -118,10 +118,6 @@ function SubmitAlert({
               </div>
             </div>
             <div>
-              <h1>Pesan : </h1>
-              <p>{form.getValues("message")}</p>
-            </div>
-            <div>
               <h1>Media : </h1>
               <FileUploader
                 value={media || null}
@@ -139,6 +135,10 @@ function SubmitAlert({
                     ))}
                 </FileUploaderContent>
               </FileUploader>
+            </div>
+            <div>
+              <h1>Pesan : </h1>
+              <AutosizeTextarea readOnly value={form.getValues("message")} />
             </div>
             <div className="flex gap-2 items-center">
               <h1>Delay : </h1>
@@ -240,7 +240,7 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
         formData.append("whatsAppBotId", values.whatsAppBot.id);
         formData.append(
           "toPhones",
-          values.toPhones.map((phone) => phone.label).join(",")
+          values.toPhones.map((phone) => phone.value).join(",")
         );
         formData.append("message", values.message);
         formData.append("delay", values.delay.toString());
@@ -266,7 +266,12 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
         if (reader) {
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              toast.success("Broadcast berhasil dikirim");
+              form.reset();
+              form.setValue("media", []);
+              break;
+            }
             const responseStream = new TextDecoder().decode(value);
             const chunks = responseStream.split("\n");
             for (const chunk of chunks) {
@@ -341,8 +346,12 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
                     <SelectContent>
                       {whatsAppBots.length > 0 ? (
                         whatsAppBots.map((bot) => (
-                          <SelectItem key={bot.id} value={bot.id}>
-                            {bot.name}
+                          <SelectItem
+                            key={bot.id}
+                            value={bot.id}
+                            disabled={bot.status !== "connected"}
+                          >
+                            {bot.name} ({bot.status})
                           </SelectItem>
                         ))
                       ) : (
@@ -422,28 +431,6 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
             </div>
             <FormField
               control={form.control}
-              name="message"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pesan</FormLabel>
-                  <FormControl>
-                    <AutosizeTextarea
-                      placeholder="Pesan yang akan di broadcast"
-                      minHeight={50}
-                      disabled={isPending}
-                      {...field}
-                      onChange={(values) => {
-                        form.clearErrors();
-                        field.onChange(values);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="media"
               render={({ field }) => (
                 <FormItem>
@@ -455,8 +442,8 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
                     className="relative bg-background rounded-lg p-2"
                   >
                     <FileInput
+                      className="outline-dashed outline-1 outline-gray-500"
                       disabled={isPending}
-                      className="outline-dashed outline-1 outline-white"
                     >
                       <div className="flex items-center justify-center flex-col pt-3 pb-4 w-full ">
                         <DragAndDropArea
@@ -481,13 +468,35 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pesan</FormLabel>
+                  <FormControl>
+                    <AutosizeTextarea
+                      placeholder="Pesan yang akan di broadcast"
+                      minHeight={50}
+                      disabled={isPending}
+                      {...field}
+                      onChange={(values) => {
+                        form.clearErrors();
+                        field.onChange(values);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="flex flex-col gap-2">
               <FormField
                 control={form.control}
                 name="delay"
                 render={({ field }) => (
                   <FormItem className="w-1/2">
-                    <FormLabel>Delay (dalam detik)</FormLabel>
+                    <FormLabel>Delay setiap nomor (dalam detik)</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Delay setiap nomor (dalam detik)"

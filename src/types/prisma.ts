@@ -1,4 +1,4 @@
-import { WhatsApp } from "@prisma/client";
+import { Prisma, WhatsApp } from "@prisma/client";
 import { ConnectionState } from "@whiskeysockets/baileys";
 
 export type WhatsAppWithData = WhatsApp & {
@@ -6,3 +6,9 @@ export type WhatsAppWithData = WhatsApp & {
   qrCode?: string;
   status?: "connecting" | "connected" | "disconnected" | string;
 };
+
+export type BroadcastWithWhatsApp = Prisma.BroadcastGetPayload<{
+  include: {
+    whatsApp: true;
+  };
+}>;

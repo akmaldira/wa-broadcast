@@ -90,9 +90,13 @@ CREATE TABLE "contact" (
 -- CreateTable
 CREATE TABLE "broadcast" (
     "id" TEXT NOT NULL,
+    "whatsapp_id" TEXT NOT NULL,
     "to_contact_ids" TEXT[],
     "message" TEXT NOT NULL,
+    "delay" INTEGER NOT NULL,
     "raw_media" TEXT,
+    "success" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "errors" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "status" TEXT DEFAULT 'pending',
     "schedule_time" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -127,3 +131,6 @@ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_fkey" FOREIGN KEY ("user_i
 
 -- AddForeignKey
 ALTER TABLE "whatsapp_session" ADD CONSTRAINT "whatsapp_session_whatsapp_id_fkey" FOREIGN KEY ("whatsapp_id") REFERENCES "whatsapp"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "broadcast" ADD CONSTRAINT "broadcast_whatsapp_id_fkey" FOREIGN KEY ("whatsapp_id") REFERENCES "whatsapp"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
