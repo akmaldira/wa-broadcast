@@ -46,21 +46,10 @@ type NavItem =
     };
 const navPos = [
   {
-    type: "group",
+    type: "item",
     title: "Broadcast",
-    url: "/app/broadcast",
+    url: "/app/broadcast/create",
     icon: RadioTower,
-    isActive: true,
-    items: [
-      {
-        title: "Buat",
-        url: "/app/broadcast/create",
-      },
-      {
-        title: "Riwayat",
-        url: "/app/broadcast/history",
-      },
-    ],
   },
   {
     type: "item",

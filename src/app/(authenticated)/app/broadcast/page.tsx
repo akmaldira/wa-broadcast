@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default async function BroadcastPage() {
-  redirect("/app/broadcast/history");
+  redirect("/app/broadcast/create");
 }

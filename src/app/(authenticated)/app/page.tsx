@@ -1,7 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default async function AppPage() {
-  return (
-    <div>
-      <h1>Dashboard Page</h1>
-    </div>
-  );
+  redirect("/app/broadcast/create");
 }
