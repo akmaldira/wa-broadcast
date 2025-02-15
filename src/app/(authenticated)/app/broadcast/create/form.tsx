@@ -77,6 +77,7 @@ function SubmitAlert({
   >;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const media = form.getValues("media");
   return (
     <Dialog
       open={dialogOpen}
@@ -121,6 +122,25 @@ function SubmitAlert({
               <p>{form.getValues("message")}</p>
             </div>
             <div>
+              <h1>Media : </h1>
+              <FileUploader
+                value={media || null}
+                onValueChange={() => {}}
+                dropzoneOptions={dropzone}
+              >
+                <FileUploaderContent>
+                  {media &&
+                    media.length > 0 &&
+                    media.map((file, i) => (
+                      <FileUploaderItem key={i} index={i}>
+                        <Paperclip className="h-4 w-4 stroke-current" />
+                        <span>{file.name}</span>
+                      </FileUploaderItem>
+                    ))}
+                </FileUploaderContent>
+              </FileUploader>
+            </div>
+            <div className="flex gap-2 items-center">
               <h1>Delay : </h1>
               <p>{form.getValues("delay")} detik</p>
             </div>
@@ -251,7 +271,6 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
               if (!chunk) continue;
               try {
                 const responseJSON = JSON.parse(chunk);
-                console.log(responseJSON);
                 if ("percentage" in responseJSON && "message" in responseJSON) {
                   setResponseText(
                     `${responseJSON.message} (Progress: ${responseJSON.percentage})`
