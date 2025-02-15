@@ -1,4 +1,5 @@
 import makeWASocket, {
+  AnyMediaMessageContent,
   Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -218,11 +219,15 @@ export async function sendMessage(
   whatsAppId: string,
   jid: string,
   message: string,
-  media?: File
+  media?: AnyMediaMessageContent
 ) {
   const whatsAppBot = whatsAppBots.get(whatsAppId);
   if (!whatsAppBot) throw new Error(`WhatsApp with id ${whatsAppId} not found`);
   try {
+    if (media) {
+      const result = await whatsAppBot.sendMessage(jid, media);
+      return result;
+    }
     const response = await whatsAppBot.sendMessage(jid, {
       text: message,
     });

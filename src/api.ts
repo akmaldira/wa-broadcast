@@ -12,8 +12,60 @@ import {
   getWhatsAppBots,
   sendMessage,
 } from "./whatsapp";
-import { createBroadcastSchema } from "./app/(authenticated)/app/broadcast/create/schema";
+import multer from "multer";
+import path from "path";
+import { AnyMediaMessageContent } from "@whiskeysockets/baileys";
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.resolve(path.join("uploads")));
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
 const prefix = "/api2";
+
+function fileToMedia(
+  file: Express.Multer.File,
+  caption: string
+): AnyMediaMessageContent {
+  const mediaType = file.mimetype.split("/")[0];
+  const filePath = path.resolve(file.path);
+
+  switch (mediaType) {
+    case "image":
+      return {
+        image: { url: filePath },
+        caption: caption || undefined,
+        mimetype: file.mimetype,
+      };
+    case "video":
+      return {
+        video: { url: filePath },
+        caption: caption || undefined,
+        mimetype: file.mimetype,
+      };
+    case "audio":
+      return {
+        audio: { url: filePath },
+        mimetype: file.mimetype,
+        caption: caption || undefined,
+      };
+    default:
+      return {
+        document: { url: filePath },
+        mimetype: file.mimetype,
+        fileName: file.originalname,
+        caption: caption || undefined,
+      };
+  }
+}
 
 function whatsAppRoute() {
   const route = Router();
@@ -119,76 +171,87 @@ function whatsAppRoute() {
 
 function publicRoute() {
   const route = Router();
-  route.post("/whatsapp/send-message", async (req, res) => {
-    try {
-      const { data, error } = createBroadcastSchema.safeParse(req.body);
-      if (error) {
-        return void res.status(400).json({ error: error.message });
-      }
-
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader("Connection", "keep-alive");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("X-Accel-Buffering", "no");
-
-      const whatsAppBot = getWhatsAppBot(data.whatsAppBot.id);
-      if (!whatsAppBot) {
-        return void res.status(400).json({ error: "Whatsapp not found" });
-      }
-
-      let index = 1;
-      for (const number of data.toPhones) {
-        const percentage = `${Math.floor(
-          (index / data.toPhones.length) * 100
-        )}%`;
-        let dataChunk = {
-          percentage: percentage,
-          message: `Mengirim pesan ke ${number.label}...`,
-        };
-        try {
-          res.write(JSON.stringify(dataChunk) + "\n");
-          console.log(dataChunk.message);
-          const response = await sendMessage(
-            data.whatsAppBot.id,
-            `${number.label.replace("+", "")}@s.whatsapp.net`,
-            data.message
-          );
-          dataChunk.message = `Pesan terkirim ke ${number.label}`;
-          res.write(JSON.stringify(dataChunk) + "\n");
-          console.log(dataChunk.message);
-        } catch (error) {
-          dataChunk.message = `Pesan gagal terkirim ke ${number.label} (${
-            error instanceof Error ? error.message : "Unknown error"
-          })`;
-          res.write(JSON.stringify(dataChunk) + "\n");
-          console.log(dataChunk.message);
-        } finally {
-          index++;
+  route.post(
+    "/whatsapp/send-message",
+    upload.single("media"),
+    async (req, res) => {
+      try {
+        const { whatsAppBotId, toPhones, message, delay } = req.body;
+        const file = req.file;
+        const mediaType = file ? file.mimetype.split("/")[0] : null;
+        if (!whatsAppBotId || !toPhones || !message || !delay) {
+          return void res.status(400).json({ error: "Missing parameters" });
         }
-        if (index - 1 < data.toPhones.length) {
-          res.write(
-            JSON.stringify({
-              ...dataChunk,
-              message: `Delay ${data.delay} detik...`,
-            }) + "\n"
-          );
-          console.log(`Delay ${data.delay} detik...`);
-          for (let i = 0; i < data.delay; i++) {
-            dataChunk.message = `Delay ${data.delay - i} detik...`;
+        const toPhoneArray = toPhones.split(",").map((phone: string) => ({
+          value: phone,
+          jid: `${phone.replace("+", "")}@s.whatsapp.net`,
+        })) as { value: string; jid: string }[];
+
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Connection", "keep-alive");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("X-Accel-Buffering", "no");
+
+        const whatsAppBot = getWhatsAppBot(whatsAppBotId);
+        if (!whatsAppBot) {
+          return void res.status(400).json({ error: "Whatsapp not found" });
+        }
+
+        let index = 1;
+        for (const number of toPhoneArray) {
+          const percentage = `${Math.floor(
+            (index / toPhoneArray.length) * 100
+          )}%`;
+          let dataChunk = {
+            percentage: percentage,
+            message: `Mengirim pesan ke ${number.value}...`,
+          };
+          try {
             res.write(JSON.stringify(dataChunk) + "\n");
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log(dataChunk.message);
+            const response = await sendMessage(
+              whatsAppBotId,
+              number.jid,
+              message,
+              file ? fileToMedia(file, message) : undefined
+            );
+            dataChunk.message = `Pesan terkirim ke ${number.value}`;
+            res.write(JSON.stringify(dataChunk) + "\n");
+            console.log(dataChunk.message);
+          } catch (error) {
+            dataChunk.message = `Pesan gagal terkirim ke ${number.value} (${
+              error instanceof Error ? error.message : "Unknown error"
+            })`;
+            res.write(JSON.stringify(dataChunk) + "\n");
+            console.log(dataChunk.message);
+          } finally {
+            index++;
+          }
+          if (index - 1 < toPhoneArray.length) {
+            res.write(
+              JSON.stringify({
+                ...dataChunk,
+                message: `Delay ${delay} detik...`,
+              }) + "\n"
+            );
+            console.log(`Delay ${delay} detik...`);
+            for (let i = 0; i < delay; i++) {
+              dataChunk.message = `Delay ${delay - i} detik...`;
+              res.write(JSON.stringify(dataChunk) + "\n");
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
           }
         }
+        return void res.end();
+      } catch (error) {
+        console.log("POST /api2/whatsapp/send-message Error:", error);
+        return void res.status(500).json({
+          error: "An error occurred",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-      return void res.end();
-    } catch (error) {
-      console.log("POST /api2/whatsapp/send-message Error:", error);
-      return void res.status(500).json({
-        error: "An error occurred",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
     }
-  });
+  );
 
   return route;
 }

@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Paperclip, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -41,6 +41,14 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DropzoneOptions } from "react-dropzone/.";
+import {
+  FileInput,
+  FileUploader,
+  FileUploaderContent,
+  FileUploaderItem,
+} from "@/components/ui/file-upload";
+import DragAndDropArea from "@/components/drag-and-drop-area";
 
 function SubmitAlert({
   onSubmit,
@@ -62,6 +70,7 @@ function SubmitAlert({
       }[];
       message: string;
       delay: number;
+      media?: File[];
     },
     any,
     undefined
@@ -147,6 +156,15 @@ function SubmitAlert({
   );
 }
 
+const dropzone = {
+  multiple: false,
+  maxFiles: 1,
+  maxSize: 5 * 1024 * 1024,
+  accept: {
+    "image/*": [".jpg", ".jpeg", ".png", ".gif"],
+  },
+} satisfies DropzoneOptions;
+
 export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
   const [isPending, startTransition] = React.useTransition();
   const [whatsAppBots, setWhatsAppBots] = React.useState<
@@ -170,6 +188,7 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
       whatsAppBot: undefined,
       toPhones: [],
       message: "",
+      media: undefined,
       delay: 120,
     },
   });
@@ -195,12 +214,24 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
     startTransition(async () => {
       const loadingToast = toast.loading("Mengirim broadcast, mohon tunggu...");
       try {
+        const formData = new FormData();
+        formData.append("whatsAppBotId", values.whatsAppBot.id);
+        formData.append(
+          "toPhones",
+          values.toPhones.map((phone) => phone.label).join(",")
+        );
+        formData.append("message", values.message);
+        formData.append("delay", values.delay.toString());
+        if (values.media && values.media.length > 0) {
+          if (values.media.length > 1) {
+            toast.error("Maksimal 1 media");
+            return;
+          }
+          formData.append("media", values.media[0]);
+        }
         const response = await fetch("/api2/whatsapp/send-message", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
+          body: formData,
           signal: controller.signal,
         });
 
@@ -386,6 +417,45 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
                       }}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="media"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Media (opsional)</FormLabel>
+                  <FileUploader
+                    value={field.value || null}
+                    onValueChange={field.onChange}
+                    dropzoneOptions={dropzone}
+                    className="relative bg-background rounded-lg p-2"
+                  >
+                    <FileInput
+                      disabled={isPending}
+                      className="outline-dashed outline-1 outline-white"
+                    >
+                      <div className="flex items-center justify-center flex-col pt-3 pb-4 w-full ">
+                        <DragAndDropArea
+                          acceptExtensions={Object.values(dropzone.accept)
+                            .flatMap((ext) => ext)
+                            .map((ext) => ext.substring(1).toUpperCase())}
+                        />
+                      </div>
+                    </FileInput>
+                    <FileUploaderContent>
+                      {field.value &&
+                        field.value.length > 0 &&
+                        field.value.map((file, i) => (
+                          <FileUploaderItem key={i} index={i}>
+                            <Paperclip className="h-4 w-4 stroke-current" />
+                            <span>{file.name}</span>
+                          </FileUploaderItem>
+                        ))}
+                    </FileUploaderContent>
+                  </FileUploader>
                   <FormMessage />
                 </FormItem>
               )}

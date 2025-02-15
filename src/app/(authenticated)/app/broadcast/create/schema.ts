@@ -16,5 +16,16 @@ export const createBroadcastSchema = z.object({
     .string()
     .min(1, "Pesan tidak boleh kosong")
     .max(1000, "Pesan terlalu panjang"),
+  media: z.optional(
+    z
+      .array(
+        z.instanceof(File).refine((file) => file.size < 5 * 1024 * 1024, {
+          message: "Maksimal 5MB",
+        })
+      )
+      .max(5, {
+        message: "Maksimal 5 media",
+      })
+  ),
   delay: z.coerce.number().min(0).max(600).default(120),
 });
