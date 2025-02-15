@@ -22,6 +22,7 @@ declare module "next-auth" {
 
 const adapter = PrismaAdapter(prisma);
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   adapter,
   providers: [

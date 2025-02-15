@@ -26,12 +26,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { createWhatsAppBotAction } from "./action";
 import { handleActionResponse } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 
 export default function AddWhatsAppDialog() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
-  const router = useRouter();
   const form = useForm<z.infer<typeof addWhatsAppSchema>>({
     resolver: zodResolver(addWhatsAppSchema),
     defaultValues: {
@@ -42,7 +40,7 @@ export default function AddWhatsAppDialog() {
   function onSubmit(values: z.infer<typeof addWhatsAppSchema>) {
     startTransition(async () => {
       const response = await createWhatsAppBotAction(values);
-      const data = handleActionResponse(response);
+      const _data = handleActionResponse(response);
       form.reset();
       setDialogOpen(false);
     });

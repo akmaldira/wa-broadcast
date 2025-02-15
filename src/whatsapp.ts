@@ -50,7 +50,7 @@ type CreateSessionOptions = {
   socketConfig?: SocketConfig;
 };
 export async function createWhatsAppBot(options: CreateSessionOptions) {
-  const { whatsAppId, whatsappName, socketConfig } = options;
+  const { whatsAppId, whatsappName, socketConfig: _ } = options;
 
   const destroy = async (logout = true, reachReconnectLimit = false) => {
     try {
@@ -117,6 +117,7 @@ export async function createWhatsAppBot(options: CreateSessionOptions) {
   };
 
   const { version } = await fetchLatestBaileysVersion();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { state, saveCreds } = await useWhatsAppSession(whatsAppId);
   const socket = makeWASocket({
     printQRInTerminal: true,

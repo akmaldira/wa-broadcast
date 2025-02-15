@@ -11,7 +11,7 @@ export async function loginAction(
   values: z.infer<typeof loginSchema>
 ): Promise<ServerAction<null>> {
   try {
-    const redirectUrl = await signIn("credentials", {
+    const _redirectUrl = await signIn("credentials", {
       ...values,
       redirect: false,
     });

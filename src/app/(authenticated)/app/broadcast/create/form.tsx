@@ -229,7 +229,9 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
   }, []);
 
   function onSubmit(values: z.infer<typeof createBroadcastSchema>) {
-    let controller = abortController ? abortController : new AbortController();
+    const controller = abortController
+      ? abortController
+      : new AbortController();
     if (!abortController) setAbortController(controller);
     startTransition(async () => {
       const loadingToast = toast.loading("Mengirim broadcast, mohon tunggu...");
@@ -276,7 +278,7 @@ export default function BroadcastForm({ contacts }: { contacts: Contact[] }) {
                     `${responseJSON.message} (Progress: ${responseJSON.percentage})`
                   );
                 }
-              } catch (error) {
+              } catch (_error) {
                 setResponseText(chunk);
               }
             }

@@ -17,10 +17,10 @@ import path from "path";
 import { AnyMediaMessageContent } from "@whiskeysockets/baileys";
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: function (_req, _file, cb) {
     cb(null, path.resolve(path.join("uploads")));
   },
-  filename: function (req, file, cb) {
+  filename: function (_req, file, cb) {
     cb(null, file.originalname);
   },
 });
@@ -88,7 +88,7 @@ function whatsAppRoute() {
     }
   });
 
-  route.get("/whatsapp", async (req, res) => {
+  route.get("/whatsapp", async (_req, res) => {
     try {
       const whatsapps = getWhatsAppBots();
       return void res.status(200).json({
@@ -178,7 +178,7 @@ function publicRoute() {
       try {
         const { whatsAppBotId, toPhones, message, delay } = req.body;
         const file = req.file;
-        const mediaType = file ? file.mimetype.split("/")[0] : null;
+        const _mediaType = file ? file.mimetype.split("/")[0] : null;
         if (!whatsAppBotId || !toPhones || !message || !delay) {
           return void res.status(400).json({ error: "Missing parameters" });
         }
@@ -202,14 +202,14 @@ function publicRoute() {
           const percentage = `${Math.floor(
             (index / toPhoneArray.length) * 100
           )}%`;
-          let dataChunk = {
+          const dataChunk = {
             percentage: percentage,
             message: `Mengirim pesan ke ${number.value}...`,
           };
           try {
             res.write(JSON.stringify(dataChunk) + "\n");
             console.log(dataChunk.message);
-            const response = await sendMessage(
+            const _response = await sendMessage(
               whatsAppBotId,
               number.jid,
               message,
