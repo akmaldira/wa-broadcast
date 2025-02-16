@@ -1,4 +1,4 @@
-import { Prisma, WhatsApp } from "@prisma/client";
+import { Prisma, User, WhatsApp } from "@prisma/client";
 import { ConnectionState } from "@whiskeysockets/baileys";
 
 export type WhatsAppWithData = WhatsApp & {
@@ -12,3 +12,5 @@ export type BroadcastWithWhatsApp = Prisma.BroadcastGetPayload<{
     whatsApp: true;
   };
 }>;
+
+export type UserWithoutPassword = Omit<User, "password">;

@@ -1,6 +1,11 @@
 "use client";
 
-import { ChevronRightIcon, Contact, RadioTower } from "lucide-react";
+import {
+  ChevronRightIcon,
+  Contact,
+  RadioTower,
+  User as UserIcon,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -28,12 +33,14 @@ import { WhatsAppIcon } from "./icons/whatsapp";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { User } from "next-auth";
+import { $Enums } from "@prisma/client";
 
 type NavItem =
   | {
       type: "item";
       title: string;
       url: string;
+      acceptedRoles: $Enums.UserRole[];
       icon: React.ElementType;
     }
   | {
@@ -60,13 +67,22 @@ const navPos = [
     type: "item",
     title: "Akun WhatsApp",
     url: "/app/whatsapp",
+    acceptedRoles: ["ROOT", "ADMIN"],
     icon: WhatsAppIcon,
   },
   {
     type: "item",
     title: "Kontak",
     url: "/app/contact",
+    acceptedRoles: ["ROOT", "ADMIN"],
     icon: Contact,
+  },
+  {
+    type: "item",
+    title: "Pengguna",
+    url: "/app/user",
+    acceptedRoles: ["ROOT"],
+    icon: UserIcon,
   },
 ] as NavItem[];
 
@@ -130,20 +146,22 @@ export function AppSidebar({
                   </SidebarMenuItem>
                 </Collapsible>
               ) : (
-                <SidebarMenuItem
-                  key={item.title}
-                  className={cn(
-                    "rounded-md",
-                    pathname === item.url && "bg-sidebar-accent"
-                  )}
-                >
-                  <SidebarMenuButton asChild className="text-md">
-                    <Link href={item.url}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                item.acceptedRoles.includes(user.role) && (
+                  <SidebarMenuItem
+                    key={item.title}
+                    className={cn(
+                      "rounded-md",
+                      pathname === item.url && "bg-sidebar-accent"
+                    )}
+                  >
+                    <SidebarMenuButton asChild className="text-md">
+                      <Link href={item.url}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
               )
             )}
           </SidebarMenu>

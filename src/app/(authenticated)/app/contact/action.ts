@@ -6,6 +6,7 @@ import { ServerAction } from "@/types/action";
 import { Contact } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
 
 export async function upsertContactAction(
   values: z.infer<typeof upsertContactSchema> & {
@@ -15,6 +16,22 @@ export async function upsertContactAction(
   }
 ): Promise<ServerAction<Contact>> {
   try {
+    const session = await auth();
+    const userSession = session?.user;
+    if (!session || !userSession) {
+      return {
+        status: "error",
+        error: "Silakan login terlebih dahulu",
+        redirect: "/login",
+      };
+    }
+
+    if (!["ROOT", "ADMIN"].includes(userSession.role)) {
+      return {
+        status: "error",
+        error: "Anda tidak punya akses mengakses aksi ini",
+      };
+    }
     let response: Contact;
     if (values.id) {
       response = await prisma.contact.update({
@@ -67,6 +84,22 @@ export async function deleteContactAction(
   id: string
 ): Promise<ServerAction<void>> {
   try {
+    const session = await auth();
+    const userSession = session?.user;
+    if (!session || !userSession) {
+      return {
+        status: "error",
+        error: "Silakan login terlebih dahulu",
+        redirect: "/login",
+      };
+    }
+
+    if (!["ROOT", "ADMIN"].includes(userSession.role)) {
+      return {
+        status: "error",
+        error: "Anda tidak punya akses mengakses aksi ini",
+      };
+    }
     await prisma.contact.delete({
       where: { id: id },
     });

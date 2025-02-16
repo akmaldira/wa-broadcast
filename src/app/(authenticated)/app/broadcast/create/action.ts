@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ServerAction } from "@/types/action";
 import { getWhatsAppBotsAction } from "../../whatsapp/action";
+import { auth } from "@/lib/auth";
 
 export async function getWhatsAppWithBotsAction(): Promise<
   ServerAction<
@@ -18,6 +19,22 @@ export async function getWhatsAppWithBotsAction(): Promise<
   >
 > {
   try {
+    const session = await auth();
+    const userSession = session?.user;
+    if (!session || !userSession) {
+      return {
+        status: "error",
+        error: "Silakan login terlebih dahulu",
+        redirect: "/login",
+      };
+    }
+
+    if (!["ROOT", "ADMIN"].includes(userSession.role)) {
+      return {
+        status: "error",
+        error: "Anda tidak punya akses mengakses aksi ini",
+      };
+    }
     const prismaWhatsApps = await prisma.whatsApp.findMany();
     const whatsAppsBots = await getWhatsAppBotsAction();
     if (whatsAppsBots.status === "error") {

@@ -15,7 +15,7 @@ export const createBroadcastSchema = z.object({
   message: z
     .string()
     .min(1, "Pesan tidak boleh kosong")
-    .max(1000, "Pesan terlalu panjang"),
+    .max(4096, "Pesan terlalu panjang"),
   media: z.optional(
     z
       .array(
