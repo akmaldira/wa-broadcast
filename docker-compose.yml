@@ -2,6 +2,7 @@ services:
   app:
     build: .
     container_name: wa-bot
+    restart: always
     ports:
       - "${PORT:-3000}:3000"
     volumes:

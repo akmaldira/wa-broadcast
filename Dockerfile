@@ -14,4 +14,4 @@ RUN yarn build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "until pg_isready -h db -p 5432; do sleep 2; done && yarn prisma:deploy && yarn start"]
+CMD ["sh", "-c", "yarn prisma:deploy && yarn start"]
