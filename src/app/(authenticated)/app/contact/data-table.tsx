@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import UpsertContactDialog from "./upsert-contact-dialog";
 import { DataTablePagination } from "@/components/table-pagination";
+import BulkCreateContactDialog from "./bulk-create-contact-dialog";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -37,7 +38,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-end mb-4 gap-4">
+        <BulkCreateContactDialog />
         <UpsertContactDialog />
       </div>
       <div className="rounded-md border">
