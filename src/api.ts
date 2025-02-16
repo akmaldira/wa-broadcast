@@ -194,9 +194,10 @@ function publicRoute() {
         const toPhoneArray = contacts.map((contact) => ({
           value: contact.id,
           jid: `${contact.phoneNumber
-            .replace(" ", "")
+            .split(" ")
+            .join("")
             .replace("+", "")}@s.whatsapp.net`,
-          label: contact.phoneNumber.replace(" ", "").replace("+", ""),
+          label: contact.phoneNumber.split(" ").join("").replace("+", ""),
         })) as { value: string; jid: string; label: string }[];
 
         res.setHeader("Content-Type", "application/json");
