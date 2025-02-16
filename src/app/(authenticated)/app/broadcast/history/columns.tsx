@@ -5,6 +5,7 @@ import { Contact } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import ContactDialog from "./contact-dialog";
 import MessagePreviewDialog from "./message-preview-dialog";
+import LogPreviewDialog from "./log-preview-dialog";
 
 export const columns: ColumnDef<
   BroadcastWithWhatsApp & { toContact: Contact[] }
@@ -49,16 +50,16 @@ export const columns: ColumnDef<
   {
     accessorKey: "errors",
     header: "Jumlah Error",
-    cell: ({ row }) => {
-      return row.original.errors.length;
-    },
+    cell: ({ row }) => (
+      <LogPreviewDialog logs={row.original.errors} type="error" />
+    ),
   },
   {
     accessorKey: "success",
     header: "Jumlah Sukses",
-    cell: ({ row }) => {
-      return row.original.success.length;
-    },
+    cell: ({ row }) => (
+      <LogPreviewDialog logs={row.original.success} type="success" />
+    ),
   },
   {
     accessorKey: "status",

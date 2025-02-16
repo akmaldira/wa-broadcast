@@ -23,7 +23,7 @@ export default function ContactDialog({ contacts }: { contacts: Contact[] }) {
           <DialogTitle>Kontak</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div>
           {contacts.map((contact) => (
             <Badge key={contact.id} className="m-1">
               {contact.phoneNumber.replaceAll(" ", "")}

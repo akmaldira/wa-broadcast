@@ -11,40 +11,34 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Eye } from "lucide-react";
 
-export default function MessagePreviewDialog({
-  message,
-  rawMedia,
+export default function LogPreviewDialog({
+  type,
+  logs,
 }: {
-  message: string;
-  rawMedia: string | null;
+  type: "error" | "success";
+  logs: string[];
 }) {
-  const media = JSON.parse(rawMedia || "[]");
-  const mediaList = Array.isArray(media) ? media : [media];
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Lihat Pesan</Button>
+        <Button
+          variant={type == "error" ? "destructive" : "secondary"}
+          disabled={logs.length < 1}
+        >
+          <Eye /> ({logs.length})
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Pesan</DialogTitle>
+          <DialogTitle>{type == "error" ? "Error" : "Success"} Log</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] p-4">
           <div>
-            <h1>Media</h1>
-            <div>
-              {mediaList.map((media, i) => (
-                <div key={i}>
-                  <h1>{media.originalname}</h1>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h1>Pesan</h1>
-            <AutosizeTextarea readOnly value={message} />
+            <h1>{type == "error" ? "Errors" : "Success"}</h1>
+            <AutosizeTextarea readOnly value={logs.join("\n")} />
           </div>
         </ScrollArea>
       </DialogContent>

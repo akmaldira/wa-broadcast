@@ -1,0 +1,49 @@
+services:
+  app:
+    build: .
+    container_name: wa-bot
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - .:/app
+    environment:
+      - PORT=${PORT:-3000}
+      - BASE_URL=${BASE_URL}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - PRIVATE_API_KEY=${PRIVATE_API_KEY}
+      - ROOT_EMAIL=${ROOT_EMAIL}
+      - ROOT_PASS=${ROOT_PASS}
+      - DATABASE_URL=${DATABASE_URL}
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASS}
+      - POSTGRES_DB=${DATABASE_NAME}
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  prisma-studio:
+    image: node:lts-alpine3.17
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    command: npx prisma studio --port 5555 --browser none
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
+      - app
+
+volumes:
+  postgres_data:

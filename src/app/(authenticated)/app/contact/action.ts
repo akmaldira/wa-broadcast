@@ -182,6 +182,7 @@ export async function bulkCreateContactAction(
     });
     const contacts = await prisma.contact.createManyAndReturn({
       data: results,
+      skipDuplicates: true,
     });
 
     const success = contacts.length;

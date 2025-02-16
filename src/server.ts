@@ -2,7 +2,6 @@ import { createServer } from "http";
 import next from "next";
 import express, { Request, Response } from "express";
 import { serveApi } from "./api";
-import "dotenv/config";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const dev = process.env.NODE_ENV !== "production";
